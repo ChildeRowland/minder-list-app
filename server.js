@@ -14,7 +14,16 @@ app.get('/', function (req, res) {
 });
 
 app.get('/minders', function (req, res) {
-	res.json(dbCollection);
+	var queryParams = req.query;
+	var filteredMinders = dbCollection;
+
+	if ( queryParams.completed === 'false' ) {
+		filteredMinders = _.where(filteredMinders, {completed: false});
+	} else if ( queryParams.completed === 'true' ) {
+		filteredMinders = _.where(filteredMinders, {completed: true});
+	}
+	
+	res.json(filteredMinders);
 });
 
 app.get('/minders/:id', function (req, res) {
