@@ -5,12 +5,27 @@ var _ = require('underscore');
 var app = express();
 var port = process.env.PORT || 3000;
 var dbCollection = require('./data.js');
-var idCounter = 1;
+var idCounter = 2;
 
 app.use(bodyParser.json());
 
 app.get('/', function (req, res) {
 	res.send('sup now');
+});
+
+app.get('/minders', function (req, res) {
+	res.json(dbCollection);
+});
+
+app.get('/minders/:id', function (req, res) {
+	var minderId = parseInt(req.params.id, 10);
+	var matchingObj = _.findWhere(dbCollection, {id: minderId});
+
+	if ( matchingObj ) {
+		res.json(matchingObj);
+	} else {
+		res.status(404).send();
+	}
 });
 
 app.post('/minders', function (req, res) {
@@ -27,18 +42,15 @@ app.post('/minders', function (req, res) {
 	res.json(body);
 });
 
-app.get('/minders', function (req, res) {
-	res.json(dbCollection);
-});
-
-app.get('/minders/:id', function (req, res) {
+app.delete('/minders/:id', function (req, res) {
 	var minderId = parseInt(req.params.id, 10);
 	var matchingObj = _.findWhere(dbCollection, {id: minderId});
 
 	if ( matchingObj ) {
+		dbCollection = _.without(dbCollection, matchingObj);
 		res.json(matchingObj);
 	} else {
-		res.status(404).send();
+		res.status(404).json({"error": "There is no matching entry"});
 	}
 });
 
