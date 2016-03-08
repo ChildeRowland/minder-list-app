@@ -1,5 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var _ = require('underscore');
 
 var app = express();
 var port = process.env.PORT || 3000;
@@ -13,7 +14,14 @@ app.get('/', function (req, res) {
 });
 
 app.post('/minders', function (req, res) {
-	var body = req.body;
+	var body = _.pick(req.body, 'description', 'completed');
+
+	if ( !_.isString(body.description) || body.description.trim().length === 0 || !_.isBoolean(body.completed) ) {
+		return res.status(400).send();
+	}
+
+	body.description = body.description.trim();
+
 	body.id = idCounter++;
 	dbCollection.push(body);
 	res.json(body);
@@ -24,14 +32,8 @@ app.get('/minders', function (req, res) {
 });
 
 app.get('/minders/:id', function (req, res) {
-	var id = parseInt(req.params.id, 10);
-	var matchingObj;
-
-	for ( item in dbCollection ) {
-		if ( dbCollection[item].id === id ) {
-			matchingObj = dbCollection[item];
-		}
-	}
+	var minderId = parseInt(req.params.id, 10);
+	var matchingObj = _.findWhere(dbCollection, {id: minderId});
 
 	if ( matchingObj ) {
 		res.json(matchingObj);
