@@ -4,8 +4,8 @@ var _ = require('underscore');
 
 var app = express();
 var port = process.env.PORT || 3000;
-var dbCollection = require('./data.js');
-var idCounter = 2;
+var db = require('./db.js');
+// var idCounter = 2;
 
 app.use(bodyParser.json());
 
@@ -15,7 +15,7 @@ app.get('/', function(req, res) {
 
 app.get('/minders', function(req, res) {
 	var queryParams = req.query;
-	var filteredMinders = dbCollection;
+	var filteredMinders = db;
 
 	if (queryParams.completed === 'false') {
 		filteredMinders = _.where(filteredMinders, {
@@ -38,7 +38,7 @@ app.get('/minders', function(req, res) {
 
 app.get('/minders/:id', function(req, res) {
 	var minderId = parseInt(req.params.id, 10);
-	var matchingObj = _.findWhere(dbCollection, {
+	var matchingObj = _.findWhere(db, {
 		id: minderId
 	});
 
@@ -54,20 +54,27 @@ app.get('/minders/:id', function(req, res) {
 app.post('/minders', function(req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 
-	if (!_.isString(body.description) || body.description.trim().length === 0 || !_.isBoolean(body.completed)) {
-		return res.status(400).send();
-	}
+	db.minder.create(body).then(function onSuccess(newMinderObj) {
+		res.json(newMinderObj.toJSON());
+	}, function onError(error) {
+		console.log(error.errors);
+		res.status(400).json(error.errors);
+	});
 
-	body.description = body.description.trim();
+	// if (!_.isString(body.description) || body.description.trim().length === 0 || !_.isBoolean(body.completed)) {
+	// 	return res.status(400).send();
+	// }
 
-	body.id = idCounter++;
-	dbCollection.push(body);
-	res.json(body);
+	// body.description = body.description.trim();
+
+	// body.id = idCounter++;
+	// db.push(body);
+	// res.json(body);
 });
 
 app.put('/minders/:id', function(req, res) {
 	var minderId = parseInt(req.params.id, 10);
-	var matchingObj = _.findWhere(dbCollection, {
+	var matchingObj = _.findWhere(db, {
 		id: minderId
 	});
 	var body = _.pick(req.body, 'description', 'completed');
@@ -101,12 +108,12 @@ app.put('/minders/:id', function(req, res) {
 
 app.delete('/minders/:id', function(req, res) {
 	var minderId = parseInt(req.params.id, 10);
-	var matchingObj = _.findWhere(dbCollection, {
+	var matchingObj = _.findWhere(db, {
 		id: minderId
 	});
 
 	if (matchingObj) {
-		dbCollection = _.without(dbCollection, matchingObj);
+		db = _.without(db, matchingObj);
 		res.json(matchingObj);
 	} else {
 		res.status(404).json({
@@ -115,6 +122,12 @@ app.delete('/minders/:id', function(req, res) {
 	}
 });
 
-app.listen(port, function() {
-	console.log('Express is listening on ' + port);
+db.sequelize.sync({force: true}).then(function () {
+	app.listen(port, function () {
+		console.log('Express is listening on ' + port);
+	});
 });
+
+
+
+
