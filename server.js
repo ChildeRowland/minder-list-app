@@ -22,6 +22,12 @@ app.get('/minders', function (req, res) {
 	} else if ( queryParams.completed === 'true' ) {
 		filteredMinders = _.where(filteredMinders, {completed: true});
 	}
+
+	if ( queryParams.q && queryParams.q.length > 0 ) {
+		filteredMinders = _.filter(filteredMinders, function(minder) {
+			return minder.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
+		});
+	}
 	
 	res.json(filteredMinders);
 });
