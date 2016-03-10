@@ -14,26 +14,22 @@ app.get('/', function(req, res) {
 });
 
 app.get('/minders', function(req, res) {
-	var queryParams = req.query;
-	var filteredMinders = db;
+	var query = req.query;
+	var where = {};
 
-	if (queryParams.completed === 'false') {
-		filteredMinders = _.where(filteredMinders, {
-			completed: false
-		});
-	} else if (queryParams.completed === 'true') {
-		filteredMinders = _.where(filteredMinders, {
-			completed: true
-		});
+	if ( query.completed && ( query.completed === 'true' || query.completed === 'false' )) {
+		where.completed = JSON.parse(query.completed.toLowerCase());
 	}
 
-	if (queryParams.q && queryParams.q.length > 0) {
-		filteredMinders = _.filter(filteredMinders, function(minder) {
-			return minder.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
-		});
+	if ( query.q && query.q.length > 0 ) {
+		where.description = { $like: '%' + query.q + '%' };
 	}
 
-	res.json(filteredMinders);
+	db.minder.findAll({ where: where }).then(function onSuccess(minders) {
+		res.json(minders);
+	}, function onError(error) {
+		res.status(500).send(error);
+	});
 });
 
 app.get('/minders/:id', function(req, res) {
