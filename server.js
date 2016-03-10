@@ -45,7 +45,7 @@ app.get('/minders/:id', function(req, res) {
 	});
 });
 
-// CREATE
+// MINDER CREATE
 app.post('/minders', function(req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 
@@ -112,6 +112,18 @@ app.delete('/minders/:id', function(req, res) {
 		res.status(500).send(error);
 	});
 });
+
+// USERS CREATE
+app.post('/users', function (req, res) {
+	var body = _.pick(req.body, 'email', 'password');
+
+	db.user.create(body).then(function onSuccess(newUser) {
+		res.json(newUser.toJSON());
+	}, function onError(error) {
+		res.status(400).json(error);
+	});
+});
+
 
 db.sequelize.sync().then(function () {
 	app.listen(port, function () {

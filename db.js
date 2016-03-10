@@ -16,6 +16,7 @@ if ( env === 'production' ) {
 var db = {};
 
 db.minder = sequelize.import(__dirname + '/models/minder.js');
+db.user = sequelize.import(__dirname + '/models/user.js');
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
