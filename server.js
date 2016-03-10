@@ -45,6 +45,7 @@ app.get('/minders/:id', function(req, res) {
 	});
 });
 
+// CREATE
 app.post('/minders', function(req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 
@@ -55,38 +56,42 @@ app.post('/minders', function(req, res) {
 	});
 });
 
+// UPDATE
 app.put('/minders/:id', function(req, res) {
 	var minderId = parseInt(req.params.id, 10);
-	var matchingObj = _.findWhere(db, {
-		id: minderId
-	});
+	
 	var body = _.pick(req.body, 'description', 'completed');
-	var validAttributes = {};
+	var attributes = {};
 
-	if (!matchingObj) {
-		return res.status(404).json({
-			"error": "Entry not found"
-		});
-	}
-
-	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-		validAttributes.completed = body.completed;
+	if ( body.hasOwnProperty('completed') ) {
+		attributes.completed = body.completed;
 	} else if (body.hasOwnProperty('completed')) {
 		return res.status(400).json({
 			"error": "Not a valid change for 'completed'."
 		})
 	}
 
-	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
-		validAttributes.description = body.description;
+	if ( body.hasOwnProperty('description') ) {
+		attributes.description = body.description;
 	} else if (body.hasOwnProperty('description')) {
 		return res.status(400).json({
 			"error": "Not a valid change for 'description'."
 		});
 	}
 
-	_.extend(matchingObj, validAttributes);
-	res.json(matchingObj);
+	db.minder.findById(minderId).then(function (minderObj) {
+		if ( minderObj ) {
+			minderObj.update(attributes).then(function onSuccess(minderObj) {
+				res.json(minderObj.toJSON());
+			}, function onError(error){
+				res.status(400).json(error);
+			});
+		} else {
+			res.status(404).send('Couldn\'t find a matching entry');
+		}
+	}, function onError(error) {
+		res.status(500).send(error);
+	});
 });
 
 // DELETE
