@@ -10,5 +10,14 @@ module.exports = function (sequelize, DataTypes) {
 			allowNull: false,
 			defaultValue: false
 		}
-	})
+	}, { 
+		hooks : {
+			beforeValidate: function (minder) {
+				if ( typeof(minder.description) === "string" ) {
+					minder.description = minder.description.trim();
+				}
+			}
+		}
+
+	});
 };
