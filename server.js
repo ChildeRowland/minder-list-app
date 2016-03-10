@@ -5,7 +5,6 @@ var _ = require('underscore');
 var app = express();
 var port = process.env.PORT || 3000;
 var db = require('./db.js');
-// var idCounter = 2;
 
 app.use(bodyParser.json());
 
@@ -41,7 +40,6 @@ app.get('/minders/:id', function(req, res) {
 		} else {
 			res.status(404).send('Can\'t find entry with that id = ' + minderId);
 		}
-		// console.log(minderObj)
 	}, function onError(error) {
 		res.status(500).send();
 	});
@@ -53,7 +51,6 @@ app.post('/minders', function(req, res) {
 	db.minder.create(body).then(function onSuccess(newMinderObj) {
 		res.json(newMinderObj.toJSON());
 	}, function onError(error) {
-		console.log(error.errors);
 		res.status(400).json(error.errors);
 	});
 });
@@ -92,20 +89,23 @@ app.put('/minders/:id', function(req, res) {
 	res.json(matchingObj);
 });
 
+// DELETE
 app.delete('/minders/:id', function(req, res) {
 	var minderId = parseInt(req.params.id, 10);
-	var matchingObj = _.findWhere(db, {
-		id: minderId
-	});
 
-	if (matchingObj) {
-		db = _.without(db, matchingObj);
-		res.json(matchingObj);
-	} else {
-		res.status(404).json({
-			"error": "There is no matching entry"
-		});
-	}
+	db.minder.findById(minderId).then(function onSuccess(minderObj) {
+		if ( minderObj ) {
+			minderObj.destroy().then(function onDelete() {
+				res.send(minderObj);
+			}, function onError(error) {
+				res.status(500).send(error);
+			});
+		} else {
+			res.status(404).send('Could not find that entry');
+		}
+	}, function onError(error) {
+		res.status(500).send(error);
+	});
 });
 
 db.sequelize.sync().then(function () {
