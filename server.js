@@ -129,6 +129,10 @@ app.post('/users', function (req, res) {
 app.post('/users/login', function (req, res) {
 	var body = _.pick(req.body, 'email', 'password');
 
+	if ( !body.email || !body.password ) {
+		res.status(500).send('authentication requires email and password');
+	}
+
 	db.user.authenticate(body).then(function onSuccess(userObj) {
 		res.json(userObj.toPublicJSON());
 	}, function onError(error) {
