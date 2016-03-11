@@ -19,7 +19,9 @@ app.get('/', function (req, res) {
 
 app.get('/minders', middleware.requireAuthentication, function (req, res) {
 	var query = req.query;
-	var where = {};
+	var where = {
+		userId: req.user.get('id')
+	};
 
 	if ( query.completed && ( query.completed === 'true' || query.completed === 'false' )) {
 		where.completed = JSON.parse(query.completed.toLowerCase());
@@ -39,7 +41,12 @@ app.get('/minders', middleware.requireAuthentication, function (req, res) {
 app.get('/minders/:id', middleware.requireAuthentication, function(req, res) {
 	var minderId = parseInt(req.params.id, 10);
 
-	db.minder.findById(minderId).then(function onSuccess(minderObj) {
+	db.minder.findOne({
+		where: {
+			id: minderId,
+			userId: req.user.get('id')
+		}
+	}).then(function onSuccess(minderObj) {
 		if ( minderObj ) {
 			res.json(minderObj.toJSON());
 		} else {
@@ -88,7 +95,12 @@ app.put('/minders/:id', middleware.requireAuthentication, function(req, res) {
 		});
 	}
 
-	db.minder.findById(minderId).then(function (minderObj) {
+	db.minder.findOne({
+		where: {
+			id: minderId,
+			userId: req.user.get('id')
+		}
+	}).then(function (minderObj) {
 		if ( minderObj ) {
 			minderObj.update(attributes).then(function onSuccess(minderObj) {
 				res.json(minderObj.toJSON());
@@ -107,7 +119,12 @@ app.put('/minders/:id', middleware.requireAuthentication, function(req, res) {
 app.delete('/minders/:id', middleware.requireAuthentication, function(req, res) {
 	var minderId = parseInt(req.params.id, 10);
 
-	db.minder.findById(minderId).then(function onSuccess(minderObj) {
+	db.minder.findOne({
+		where: {
+			id: minderId,
+			userId: req.user.get('id')
+		}
+	}).then(function onSuccess(minderObj) {
 		if ( minderObj ) {
 			minderObj.destroy().then(function onDelete() {
 				res.send(minderObj);
