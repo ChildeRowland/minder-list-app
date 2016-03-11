@@ -13,24 +13,27 @@ app.get('/', function (req, res) {
 	res.send('sup now');
 });
 
-app.get('/minders', function (req, res) {
-	var query = req.query;
-	var where = {};
+var minderRoutes = require('./routes/minder.js');
+minderRoutes(app);
 
-	if ( query.completed && ( query.completed === 'true' || query.completed === 'false' )) {
-		where.completed = JSON.parse(query.completed.toLowerCase());
-	}
+// app.get('/minders', function (req, res) {
+// 	var query = req.query;
+// 	var where = {};
 
-	if ( query.q && query.q.length > 0 ) {
-		where.description = { $like: '%' + query.q + '%' };
-	}
+// 	if ( query.completed && ( query.completed === 'true' || query.completed === 'false' )) {
+// 		where.completed = JSON.parse(query.completed.toLowerCase());
+// 	}
 
-	db.minder.findAll({ where: where }).then(function onSuccess(minders) {
-		res.json(minders);
-	}, function onError(error) {
-		res.status(500).send(error);
-	});
-});
+// 	if ( query.q && query.q.length > 0 ) {
+// 		where.description = { $like: '%' + query.q + '%' };
+// 	}
+
+// 	db.minder.findAll({ where: where }).then(function onSuccess(minders) {
+// 		res.json(minders);
+// 	}, function onError(error) {
+// 		res.status(500).send(error);
+// 	});
+// });
 
 app.get('/minders/:id', function(req, res) {
 	var minderId = parseInt(req.params.id, 10);
@@ -134,7 +137,7 @@ app.post('/users/login', function (req, res) {
 	}
 
 	db.user.authenticate(body).then(function onSuccess(userObj) {
-		res.json(userObj.toPublicJSON());
+		res.header('Auth', userObj.generateToken('authentication')).json(userObj.toPublicJSON());
 	}, function onError(error) {
 		res.status(401).send('Invalid Credentials')
 	});
