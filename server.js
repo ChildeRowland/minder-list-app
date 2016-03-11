@@ -137,9 +137,16 @@ app.post('/users/login', function (req, res) {
 	}
 
 	db.user.authenticate(body).then(function onSuccess(userObj) {
-		res.header('Auth', userObj.generateToken('authentication')).json(userObj.toPublicJSON());
+		var token = userObj.generateToken('authentication');
+
+		if (token) {
+			res.header('Auth', token).json(userObj.toPublicJSON());
+		} else {
+			res.status(401).send('Invalid Credentials');
+		}
+		
 	}, function onError(error) {
-		res.status(401).send('Invalid Credentials')
+		res.status(401).send('Invalid Credentials');
 	});
 });
 
