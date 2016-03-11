@@ -54,8 +54,12 @@ app.get('/minders/:id', middleware.requireAuthentication, function(req, res) {
 app.post('/minders', middleware.requireAuthentication, function(req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 
-	db.minder.create(body).then(function onSuccess(newMinderObj) {
-		res.json(newMinderObj.toJSON());
+	db.minder.create(body).then(function onCreate(minder) {
+		req.user.addMinder(minder).then(function () {
+			return minder.reload();
+		}).then(function (minder) {
+			res.json(minder.toJSON());
+		});
 	}, function onError(error) {
 		res.status(400).json(error.errors);
 	});
