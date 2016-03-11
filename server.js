@@ -1,11 +1,12 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
+var db = require('./db.js');
 var bcrypt = require('bcrypt');
+var middleware = require('./middleware.js')(db);
 
 var app = express();
 var port = process.env.PORT || 3000;
-var db = require('./db.js');
 
 app.use(bodyParser.json());
 
@@ -13,29 +14,29 @@ app.get('/', function (req, res) {
 	res.send('sup now');
 });
 
-var minderRoutes = require('./routes/minder.js');
-minderRoutes(app);
+// var minderRoutes = require('./routes/minder.js');
+// minderRoutes(app);
 
-// app.get('/minders', function (req, res) {
-// 	var query = req.query;
-// 	var where = {};
+app.get('/minders', middleware.requireAuthentication, function (req, res) {
+	var query = req.query;
+	var where = {};
 
-// 	if ( query.completed && ( query.completed === 'true' || query.completed === 'false' )) {
-// 		where.completed = JSON.parse(query.completed.toLowerCase());
-// 	}
+	if ( query.completed && ( query.completed === 'true' || query.completed === 'false' )) {
+		where.completed = JSON.parse(query.completed.toLowerCase());
+	}
 
-// 	if ( query.q && query.q.length > 0 ) {
-// 		where.description = { $like: '%' + query.q + '%' };
-// 	}
+	if ( query.q && query.q.length > 0 ) {
+		where.description = { $like: '%' + query.q + '%' };
+	}
 
-// 	db.minder.findAll({ where: where }).then(function onSuccess(minders) {
-// 		res.json(minders);
-// 	}, function onError(error) {
-// 		res.status(500).send(error);
-// 	});
-// });
+	db.minder.findAll({ where: where }).then(function onSuccess(minders) {
+		res.json(minders);
+	}, function onError(error) {
+		res.status(500).send(error);
+	});
+});
 
-app.get('/minders/:id', function(req, res) {
+app.get('/minders/:id', middleware.requireAuthentication, function(req, res) {
 	var minderId = parseInt(req.params.id, 10);
 
 	db.minder.findById(minderId).then(function onSuccess(minderObj) {
@@ -50,7 +51,7 @@ app.get('/minders/:id', function(req, res) {
 });
 
 // MINDER CREATE
-app.post('/minders', function(req, res) {
+app.post('/minders', middleware.requireAuthentication, function(req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 
 	db.minder.create(body).then(function onSuccess(newMinderObj) {
@@ -61,7 +62,7 @@ app.post('/minders', function(req, res) {
 });
 
 // UPDATE
-app.put('/minders/:id', function(req, res) {
+app.put('/minders/:id', middleware.requireAuthentication, function(req, res) {
 	var minderId = parseInt(req.params.id, 10);
 	
 	var body = _.pick(req.body, 'description', 'completed');
@@ -99,7 +100,7 @@ app.put('/minders/:id', function(req, res) {
 });
 
 // DELETE
-app.delete('/minders/:id', function(req, res) {
+app.delete('/minders/:id', middleware.requireAuthentication, function(req, res) {
 	var minderId = parseInt(req.params.id, 10);
 
 	db.minder.findById(minderId).then(function onSuccess(minderObj) {
