@@ -1,6 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
+var bcrypt = require('bcrypt');
 
 var app = express();
 var port = process.env.PORT || 3000;
@@ -8,11 +9,11 @@ var db = require('./db.js');
 
 app.use(bodyParser.json());
 
-app.get('/', function(req, res) {
+app.get('/', function (req, res) {
 	res.send('sup now');
 });
 
-app.get('/minders', function(req, res) {
+app.get('/minders', function (req, res) {
 	var query = req.query;
 	var where = {};
 
@@ -121,6 +122,17 @@ app.post('/users', function (req, res) {
 		res.json(newUser.toPublicJSON());
 	}, function onError(error) {
 		res.status(400).json(error);
+	});
+});
+
+// USER LOGIN POST
+app.post('/users/login', function (req, res) {
+	var body = _.pick(req.body, 'email', 'password');
+
+	db.user.authenticate(body).then(function onSuccess(userObj) {
+		res.json(userObj.toPublicJSON());
+	}, function onError(error) {
+		res.status(401).send('Invalid Credentials')
 	});
 });
 
