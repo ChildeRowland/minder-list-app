@@ -1,4 +1,5 @@
 var express = require('express');
+var ejs = require('ejs');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
 var db = require('./db.js');
@@ -10,8 +11,12 @@ var port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
+app.set('view engine', 'ejs');
+app.set('views', __dirname + '/client');
+app.use('/assets', express.static(__dirname + '/client'));
+
 app.get('/', function (req, res) {
-	res.send('sup now');
+	res.render('index.ejs');
 });
 
 // var minderRoutes = require('./routes/minder.js');
@@ -153,6 +158,7 @@ app.post('/users', function (req, res) {
 // USER LOGIN POST
 app.post('/users/login', function (req, res) {
 	var body = _.pick(req.body, 'email', 'password');
+	var userInstance;
 
 	if ( !body.email || !body.password ) {
 		res.status(500).send('authentication requires email and password');
@@ -160,15 +166,31 @@ app.post('/users/login', function (req, res) {
 
 	db.user.authenticate(body).then(function onSuccess(userObj) {
 		var token = userObj.generateToken('authentication');
+		userInstance = userObj;
 
-		if (token) {
-			res.header('Auth', token).json(userObj.toPublicJSON());
-		} else {
-			res.status(401).send('Invalid Credentials');
-		}
+		return db.token.create({
+			token: token
+		});
+
+		// if (token) {
+		// 	res.header('Auth', token).json(userObj.toPublicJSON());
+		// } else {
+		// 	res.status(401).send('Invalid Credentials');
+		// }
 		
-	}, function onError(error) {
+	}).then(function (tokenInstance) {
+		res.header('Auth', tokenInstance.get('token')).json(userInstance.toPublicJSON());
+	}).catch(function onError(error) {
 		res.status(401).send('Invalid Credentials');
+	});
+});
+
+// DELETE /user/logout
+app.delete('/users/login', middleware.requireAuthentication, function (req, res) {
+	req.token.destroy().then(function () {
+		res.status(204).send('You\'ve been logged out');
+	}).catch(function () {
+		res.status(500).send('Something went wrong while logging out');
 	});
 });
 
