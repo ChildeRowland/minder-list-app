@@ -63,7 +63,9 @@ app.get('/minders/:id', middleware.requireAuthentication, function(req, res) {
 });
 
 // MINDER CREATE
-app.post('/minders', middleware.requireAuthentication, function(req, res) {
+app.post('/minders', middleware.requireAuthentication, function (req, res) {
+	console.log(req.headers);
+	console.log(req.body.description);
 	var body = _.pick(req.body, 'description', 'completed');
 
 	db.minder.create(body).then(function onCreate(minder) {
@@ -186,7 +188,7 @@ app.post('/users/login', function (req, res) {
 });
 
 // DELETE /user/logout
-app.delete('/users/login', middleware.requireAuthentication, function (req, res) {
+app.delete('api/users/login', middleware.requireAuthentication, function (req, res) {
 	req.token.destroy().then(function () {
 		res.status(204).send('You\'ve been logged out');
 	}).catch(function () {
