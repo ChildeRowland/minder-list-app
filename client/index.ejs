@@ -13,10 +13,24 @@
 
     <button ng-click="main.register()">Register</button>
     <button ng-click="main.login()">Login</button>
-    <button ng-click="main.postMinder()">Post Minder</button>
 
-    <button ng-click="main.getQuote()">get quote</button>
-    <br><br>
-    {{main.message}}
+    <hr>
+
+    <div>
+        <form>
+            <input type="text"
+                   ng-model="main.minder.description"
+                   placeholder="description">
+            <input type="submit"
+                   ng-click="main.postMinder()"
+                   value="Add Reminder"> 
+        </form>
+    </div>
+
+    <hr>
+
+    <div>
+        {{ main.results | json }}
+    </div>
 
 </html>

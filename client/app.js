@@ -1,20 +1,23 @@
 angular.module('minderApp', [])
 
-.factory('AuthTokenDTO', function ($window) {
-	var store = $window.localStorage;
+.factory('RequestDTO', function ($http) {
 
 	return {
-		setToken: function (token) {
-			if (token) {
-
-			}
+		dbCall: function (method, url, dataObj, headersObj) {
+			return $http({
+				method: method,
+				url: url,
+				data: dataObj,
+				headers: headersObj
+			});
 		}
-	}
+	};
 })
 
-.controller('Main', function ($http) {
+.controller('Main', function ($http, RequestDTO) {
 	var self = this;
 	self.welcome = 'Working';
+	self.minder = {};
 
 	self.register = function() {
 	  	return $http.post('/users', {
@@ -35,14 +38,32 @@ angular.module('minderApp', [])
 	};
 
 	self.postMinder = function () {
-		var access = localStorage.getItem('Auth');
-		return $http({
-			method: 'POST',
-			url: 'minders',
-			data: { description: 'Who dat Ninja?' },
-			headers: { 'Auth': access }
-		})
+		RequestDTO.dbCall('POST', 'minders', 
+		{ description: self.minder.description }, 
+		{ 'Auth': localStorage.getItem('Auth')}
+		).then(function () {
+			self.allMinders();
+		});
 	};
+
+	self.results;
+
+	self.allMinders = function () {
+		RequestDTO.dbCall('GET', 'minders', null, 
+		{ 'Auth': localStorage.getItem('Auth') }).then(function (res) {
+			self.results = res.data;
+		});
+	}
+
+	// self.postMinder = function () {
+	// 	var access = localStorage.getItem('Auth');
+	// 	return $http({
+	// 		method: 'POST',
+	// 		url: 'minders',
+	// 		data: { description: 'Who dat Ninja?' },
+	// 		headers: { 'Auth': access }
+	// 	})
+	// };
 });
 
 //localStorage.getItem('Auth');
