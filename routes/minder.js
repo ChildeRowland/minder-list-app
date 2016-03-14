@@ -1,47 +1,134 @@
+var colors = require('./../dev/colors.js');
 var express = require('express');
 var bodyParser = require('body-parser');
 var db = require('./../db.js');
+var middleware = require('./../middleware.js')(db);
+var _ = require('underscore');
 
 var app = express();
 app.use(bodyParser.json());
 
 module.exports = function (app) {
-	// READ all entries with optional params
-	app.get('/minders', function (req, res) {
-		var query = req.query;
-		var where = {};
 
-		if ( isValidBoolean(query, 'completed') ) {
-			where.completed = JSON.parse(query.completed.toLowerCase());
-		}
+	app.route('/minders/')
+		.get(middleware.requireAuthentication, function (req, res) {
+			var query = req.query;
+			var where = {
+				userId: req.user.get('id')
+			};
 
-		if ( query.hasOwnProperty('q') && query.q.length > 0 ) {
-			where.description = { $like: '%' + query.q + '%' };
-		}
+			if ( isValidBoolean(query, 'completed') ) {
+				where.completed = JSON.parse(query.completed.toLowerCase());
+			}
 
-		db.minder.findAll({ where: where }).then(function onSuccess(allMinders) {
-			res.json(allMinders);
-		}, function onError(error) {
-			res.status(500).send(error);
+			if ( query.q && query.q.length > 0 ) {
+				where.description = { $like: '%' + query.q + '%' };
+			}
+
+			db.minder.findAll({ where: where }).then(function onSuccess(minders) {
+				res.json(minders);
+			}, function onError(error) {
+				res.status(500).send(error);
+			});
+		})
+		.post(middleware.requireAuthentication, function (req, res) {
+			var body = _.pick(req.body, 'description', 'completed');
+
+			db.minder.create(body).then(function onCreate(minder) {
+				req.user.addMinder(minder).then(function () {
+					return minder.reload();
+				}).then(function (minder) {
+					res.json(minder.toJSON());
+				});
+			}, function onError(error) {
+				res.status(400).json(error.errors);
+			});
 		});
-	});
-	// // READ one enty with id
-	// app.get('/minders/:id', function (req, res) {
 
-	// });
-	// // CREATE a new entry
-	// app.post('/minders', function (req, res) {
+	app.route('/minders/:id')
+		.get(middleware.requireAuthentication, function (req, res) {
+			var minderId = parseInt(req.params.id, 10);
 
-	// });
-	// // UPDATE entry with id
-	// app.put('/minder/:id', function (req, res) {
+			db.minder.findOne({
+				where: {
+					id: minderId,
+					userId: req.user.get('id')
+				}
+			}).then(function onSuccess(minder) {
+				if ( minder ) {
+					res.json( minder.toJSON() );
+				} else {
+					res.status(404).send('Can\'t find entry with that id = ' + minderId);
+				}
+			}, function onError(error) {
+				res.status(500).send();
+			});
+		})
+		.put(middleware.requireAuthentication, function (req, res) {
+			var minderId = parseInt(req.params.id, 10);
+			
+			var body = _.pick(req.body, 'description', 'completed');
+			var attributes = {};
 
-	// });
-	// // DESTROY entry with id
-	// app.delete('/minder/:id', function (req, res) {
+			if ( isValidBoolean(body, 'completed') ) {
+				attributes.completed = body.completed;
+			} else if (body.hasOwnProperty('completed')) {
+				return res.status(400).json({
+					"error": "Not a valid change for 'completed'."
+				})
+			}
 
-	// });
-}
+			if ( body.hasOwnProperty('description') ) {
+				attributes.description = body.description;
+			} else if (body.hasOwnProperty('description')) {
+				return res.status(400).json({
+					"error": "Not a valid change for 'description'."
+				});
+			}
+
+			db.minder.findOne({
+				where: {
+					id: minderId,
+					userId: req.user.get('id')
+				}
+			}).then(function (minder) {
+				if ( minder ) {
+					minder.update(attributes).then(function onSuccess(minder) {
+						res.json( minder.toJSON() );
+					}, function onError(error){
+						res.status(400).json(error);
+					});
+				} else {
+					res.status(404).send('Couldn\'t find a matching entry');
+				}
+			}, function onError(error) {
+				res.status(500).send(error);
+			});
+		})
+		.delete(middleware.requireAuthentication, function (req, res) {
+			var minderId = parseInt(req.params.id, 10);
+
+			db.minder.findOne({
+				where: {
+					id: minderId,
+					userId: req.user.get('id')
+				}
+			}).then(function onSuccess(minder) {
+				if ( minder ) {
+					minder.destroy().then(function onDelete() {
+						res.send( minder );
+					}, function onError(error) {
+						res.status(500).send(error);
+					});
+				} else {
+					res.status(404).send('Could not find that entry');
+				}
+			}, function onError(error) {
+				res.status(500).send(error);
+			});
+		});
+	
+};
 
 // HELPER FUNCTIONS
 function isValidBoolean (obj, prop) {
@@ -52,6 +139,7 @@ function isValidBoolean (obj, prop) {
 	} 
 }
 
-// var minderRoutes = require('./routes/minder.js');
-// minderRoutes(app);
+
+
+
 

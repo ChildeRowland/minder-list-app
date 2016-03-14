@@ -22,6 +22,9 @@ db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
 db.minder.belongsTo(db.user);
-db.user.hasMany(db.minder);
+db.user.hasMany(db.minder, {
+	onDelete: 'cascade', 
+	hooks:true
+});
 
 module.exports = db;

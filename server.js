@@ -1,3 +1,4 @@
+var colors = require('./dev/colors.js');
 var express = require('express');
 var ejs = require('ejs');
 var bodyParser = require('body-parser');
@@ -19,187 +20,67 @@ app.get('/', function (req, res) {
 	res.render('index.ejs');
 });
 
-// var minderRoutes = require('./routes/minder.js');
-// minderRoutes(app);
+var minderRoutes = require('./routes/minder.js');
+var userRoutes = require('./routes/user.js');
 
-app.get('/minders', middleware.requireAuthentication, function (req, res) {
-	var query = req.query;
-	var where = {
-		userId: req.user.get('id')
-	};
+minderRoutes(app);
+userRoutes(app);
 
-	if ( query.completed && ( query.completed === 'true' || query.completed === 'false' )) {
-		where.completed = JSON.parse(query.completed.toLowerCase());
-	}
 
-	if ( query.q && query.q.length > 0 ) {
-		where.description = { $like: '%' + query.q + '%' };
-	}
+// // USERS CREATE
+// app.post('/users', function (req, res) {
+// 	var body = _.pick(req.body, 'email', 'password');
 
-	db.minder.findAll({ where: where }).then(function onSuccess(minders) {
-		res.json(minders);
-	}, function onError(error) {
-		res.status(500).send(error);
-	});
-});
+// 	db.user.create(body).then(function onSuccess(newUser) {
+// 		res.json(newUser.toPublicJSON());
+// 	}, function onError(error) {
+// 		res.status(400).json(error);
+// 	});
+// });
 
-app.get('/minders/:id', middleware.requireAuthentication, function(req, res) {
-	var minderId = parseInt(req.params.id, 10);
+// // USER LOGIN POST
+// app.post('/users/login', function (req, res) {
+// 	var body = _.pick(req.body, 'email', 'password');
+// 	var userInstance;
 
-	db.minder.findOne({
-		where: {
-			id: minderId,
-			userId: req.user.get('id')
-		}
-	}).then(function onSuccess(minderObj) {
-		if ( minderObj ) {
-			res.json(minderObj.toJSON());
-		} else {
-			res.status(404).send('Can\'t find entry with that id = ' + minderId);
-		}
-	}, function onError(error) {
-		res.status(500).send();
-	});
-});
+// 	if ( !body.email || !body.password ) {
+// 		res.status(500).send('authentication requires email and password');
+// 	}
 
-// MINDER CREATE
-app.post('/minders', middleware.requireAuthentication, function (req, res) {
-	console.log(req.headers);
-	console.log(req.body.description);
-	var body = _.pick(req.body, 'description', 'completed');
+// 	db.user.authenticate(body).then(function onSuccess(userObj) {
+// 		var token = userObj.generateToken('authentication');
+// 		userInstance = userObj;
 
-	db.minder.create(body).then(function onCreate(minder) {
-		req.user.addMinder(minder).then(function () {
-			return minder.reload();
-		}).then(function (minder) {
-			res.json(minder.toJSON());
-		});
-	}, function onError(error) {
-		res.status(400).json(error.errors);
-	});
-});
+// 		return db.token.create({
+// 			token: token
+// 		});
 
-// UPDATE
-app.put('/minders/:id', middleware.requireAuthentication, function(req, res) {
-	var minderId = parseInt(req.params.id, 10);
-	
-	var body = _.pick(req.body, 'description', 'completed');
-	var attributes = {};
-
-	if ( body.hasOwnProperty('completed') ) {
-		attributes.completed = body.completed;
-	} else if (body.hasOwnProperty('completed')) {
-		return res.status(400).json({
-			"error": "Not a valid change for 'completed'."
-		})
-	}
-
-	if ( body.hasOwnProperty('description') ) {
-		attributes.description = body.description;
-	} else if (body.hasOwnProperty('description')) {
-		return res.status(400).json({
-			"error": "Not a valid change for 'description'."
-		});
-	}
-
-	db.minder.findOne({
-		where: {
-			id: minderId,
-			userId: req.user.get('id')
-		}
-	}).then(function (minderObj) {
-		if ( minderObj ) {
-			minderObj.update(attributes).then(function onSuccess(minderObj) {
-				res.json(minderObj.toJSON());
-			}, function onError(error){
-				res.status(400).json(error);
-			});
-		} else {
-			res.status(404).send('Couldn\'t find a matching entry');
-		}
-	}, function onError(error) {
-		res.status(500).send(error);
-	});
-});
-
-// DELETE
-app.delete('/minders/:id', middleware.requireAuthentication, function(req, res) {
-	var minderId = parseInt(req.params.id, 10);
-
-	db.minder.findOne({
-		where: {
-			id: minderId,
-			userId: req.user.get('id')
-		}
-	}).then(function onSuccess(minderObj) {
-		if ( minderObj ) {
-			minderObj.destroy().then(function onDelete() {
-				res.send(minderObj);
-			}, function onError(error) {
-				res.status(500).send(error);
-			});
-		} else {
-			res.status(404).send('Could not find that entry');
-		}
-	}, function onError(error) {
-		res.status(500).send(error);
-	});
-});
-
-// USERS CREATE
-app.post('/users', function (req, res) {
-	var body = _.pick(req.body, 'email', 'password');
-
-	db.user.create(body).then(function onSuccess(newUser) {
-		res.json(newUser.toPublicJSON());
-	}, function onError(error) {
-		res.status(400).json(error);
-	});
-});
-
-// USER LOGIN POST
-app.post('/users/login', function (req, res) {
-	var body = _.pick(req.body, 'email', 'password');
-	var userInstance;
-
-	if ( !body.email || !body.password ) {
-		res.status(500).send('authentication requires email and password');
-	}
-
-	db.user.authenticate(body).then(function onSuccess(userObj) {
-		var token = userObj.generateToken('authentication');
-		userInstance = userObj;
-
-		return db.token.create({
-			token: token
-		});
-
-		// if (token) {
-		// 	res.header('Auth', token).json(userObj.toPublicJSON());
-		// } else {
-		// 	res.status(401).send('Invalid Credentials');
-		// }
+// 		// if (token) {
+// 		// 	res.header('Auth', token).json(userObj.toPublicJSON());
+// 		// } else {
+// 		// 	res.status(401).send('Invalid Credentials');
+// 		// }
 		
-	}).then(function (tokenInstance) {
-		res.header('Auth', tokenInstance.get('token')).json(userInstance.toPublicJSON());
-	}).catch(function onError(error) {
-		res.status(401).send('Invalid Credentials');
-	});
-});
+// 	}).then(function (tokenInstance) {
+// 		res.header('Auth', tokenInstance.get('token')).json(userInstance.toPublicJSON());
+// 	}).catch(function onError(error) {
+// 		res.status(401).send('Invalid Credentials');
+// 	});
+// });
 
-// DELETE /user/logout
-app.delete('api/users/login', middleware.requireAuthentication, function (req, res) {
-	req.token.destroy().then(function () {
-		res.status(204).send('You\'ve been logged out');
-	}).catch(function () {
-		res.status(500).send('Something went wrong while logging out');
-	});
-});
+// // DELETE /user/logout
+// app.delete('api/users/login', middleware.requireAuthentication, function (req, res) {
+// 	req.token.destroy().then(function () {
+// 		res.status(204).send('You\'ve been logged out');
+// 	}).catch(function () {
+// 		res.status(500).send('Something went wrong while logging out');
+// 	});
+// });
 
 
 db.sequelize.sync({force: true}).then(function () {
 	app.listen(port, function () {
-		console.log('Express is listening on ' + port);
+		console.log(colors.info('Express is listening on ' + port));
 	});
 });
 
