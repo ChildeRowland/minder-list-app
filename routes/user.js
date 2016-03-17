@@ -20,6 +20,30 @@ module.exports = function (app) {
 		});
 	});
 
+	app.get('/user', middleware.requireAuthentication, function (req, res) {
+		if ( !req.user ) {
+			res.status(200).send(false);
+		} else {
+
+			db.user.findOne({ 
+				where: {
+					id: req.user.id
+				}
+			}).then(function onSuccess(user) {
+
+				if ( user ) {
+					res.status(200).send(true);
+				} else {
+					res.status(500).send(false);
+				}
+
+			}, function onError() {
+				res.status(404).send(false);
+			});
+
+		}
+	});
+
 	app.delete('/user', middleware.requireAuthentication, function (req, res) {
 		db.user.findOne({ 
 			where: {
@@ -30,13 +54,13 @@ module.exports = function (app) {
 				req.token.destroy().then(function () {
 					res.send('All user data destroyed');
 				}, function onError(error) {
-					res.send('Problem destorying the token');
+					res.status(400).send('Problem destorying the token');
 				});
 			}, function onError() {
-				res.send('Problem destorying the user');
+				res.status(400).send('Problem destorying the user');
 			});
 		}, function onError() {
-			res.send('could not find the user');
+			res.status(404).send('could not find the user');
 		});
 	});
 

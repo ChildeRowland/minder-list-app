@@ -2,6 +2,7 @@
     <head>
         <title>Reminder Auth</title>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.0-beta.5/angular.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.0/angular-resource.js"></script>
         <script src="assets/app.js"></script>
     </head>
     <body ng-app="minderApp" ng-controller="Main as main">
@@ -16,7 +17,7 @@
 
     <hr>
 
-    <div>
+    <div ng-if="main.isCurrentUser()">
         <form>
             <input type="text"
                    ng-model="main.minder.description"
@@ -30,7 +31,23 @@
     <hr>
 
     <div>
-        {{ main.results | json }}
+        {{ main.oneResult }}
+    </div>
+
+    <hr>
+
+    <div ng-repeat="result in main.results">
+        <button ng-click="main.markComplete(result.id)">
+            Completed?
+        </button>
+        <span ng-click="main.showOne(result.id)">
+            <span ng-bind="result.id"></span>
+            <span ng-bind="result.description"></span>
+            <span ng-bind="results.completed"></span>
+        </span>
+        <button ng-click="main.deleteMinder(result.id)">
+            Delete
+        </button>
     </div>
 
 </html>

@@ -96,7 +96,7 @@ module.exports = function (app) {
 					minder.update(attributes).then(function onSuccess(minder) {
 						res.json( minder.toJSON() );
 					}, function onError(error){
-						res.status(400).json(error);
+						res.status(400).send('can\'t update');
 					});
 				} else {
 					res.status(404).send('Couldn\'t find a matching entry');
