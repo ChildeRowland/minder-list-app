@@ -2,7 +2,6 @@ angular.module('minderApp', ['ngResource'])
 
 .factory('minderResource', function($resource) {
 
-
 	return $resource('/minders/:id', { id: '@_id' }, {
 		query: {
 			method: 'GET',
@@ -15,6 +14,10 @@ angular.module('minderApp', ['ngResource'])
 		},
 		post: {
 			method: 'POST',
+			headers: { 'Auth': getAuthToken }
+		},
+		save: {
+			method: 'PUT',
 			headers: { 'Auth': getAuthToken }
 		},
 		delete: {
@@ -95,7 +98,12 @@ angular.module('minderApp', ['ngResource'])
 	};
 
 	self.markComplete = function (id) {
-		RequestDTO.dbCall('PUT', '/minders/' + id, {"completed": "true"}, { 'Auth': localStorage.getItem('Auth')});
+		// RequestDTO.dbCall('PUT', '/minders/' + id, {"completed": "true"}, { 'Auth': localStorage.getItem('Auth')});
+		minderResource.get({ id: id }).$promise.then(function (res) {
+			res['completed'] = 'true';
+			res.$save({ id: id });
+			console.log('Entry Saved');
+		});
 	};
 
 	self.deleteMinder = function (id) {
