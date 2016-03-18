@@ -78,7 +78,7 @@ module.exports = function (app) {
 				})
 			}
 
-			if ( body.hasOwnProperty('description') ) {
+			if ( body.hasOwnProperty('description') && body.description.length > 1) {
 				attributes.description = body.description;
 			} else if (body.hasOwnProperty('description')) {
 				return res.status(400).json({

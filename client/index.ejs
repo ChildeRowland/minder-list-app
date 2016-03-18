@@ -23,25 +23,46 @@
                    ng-model="ctrl.Minder.new.description"
                    placeholder="description">
             <input type="submit"
-                   ng-click="ctrl.Minder.save( ctrl.Minder.new )"
+                   ng-click="ctrl.Minder.post( ctrl.Minder.new )"
                    value="Add Reminder"> 
         </form>
     </div>
 
     <hr>
-        {{ ctrl.Minder.all }}
+
     <div ng-repeat="result in ctrl.Minder.all track by $index">
-        <button ng-click="ctrl.markComplete(result.id)">
-            Completed = {{ result.completed }}
-        </button>
         <span ng-click="ctrl.showOne(result.id)">
             <span ng-bind="result.id"></span>
-            <span ng-bind="result.description"></span>
-            <span ng-bind="result.completed"></span>
+            <span ng-bind="result.description"
+                  ng-hide="ctrl.isEditable">
+            </span>
+            <input type="text"
+                   ng-model="result.newDesc"
+                   ng-show="ctrl.isEditable">
+            <button ng-click="ctrl.Minder.update( result.id, {description: result.newDesc}); ctrl.editForm()"
+                    ng-show="ctrl.isEditable">
+                Update
+            </button>
         </span>
-        <button ng-click="ctrl.deleteMinder(result.id)">
+        <button ng-click="ctrl.Minder.completed( result.id )"
+                ng-hide="ctrl.isEditable">
+            Completed = {{ result.completed }}
+        </button>
+        <button ng-click="ctrl.editForm()"
+                ng-hide="ctrl.isEditable">
+            Edit
+        </button>
+        <button ng-click="ctrl.editForm()"
+                ng-show="ctrl.isEditable">
+            Cancel
+        </button>
+        <button ng-click="ctrl.Minder.delete( result.id )"
+                ng-hide="ctrl.isEditable">
             Delete
         </button>
     </div>
+    <pre>
+        {{ ctrl.Minder.all | json }}
+    </pre>
 
 </html>

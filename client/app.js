@@ -3,12 +3,11 @@ angular.module('minderApp', ['ngResource'])
 .factory('minderResource', function($resource, $http) {
 	$http.defaults.headers.common['Auth'] = getAuthToken;
 
-	return $resource('/minders/:id', { id: '@_id' });
+	return $resource('/minders/:id', { id: '@id' });
 
 	function getAuthToken() {
 		return localStorage.getItem('Auth');
 	}
-
 })
 
 .factory('MinderDTO', function ($log, minderResource) {
@@ -22,13 +21,21 @@ angular.module('minderApp', ['ngResource'])
 		minderResource.query().$promise
 		.then(function onSuccess(success) {
 			self.all = JSON.parse(angular.toJson(success));
-			console.log(self.all);
 		}, function onError(error) {
 			$log.error(error);
 		});
 	}
 
-	Minder.prototype.save = function (newMinder) {
+	Minder.prototype.get = function (id) {
+		minderResource.get({ id: id }).$promise
+		.then(function onSuccess(success) {
+			$log.info(success);
+		}, function onError(error) {
+			$log.error(error);
+		})
+	}
+
+	Minder.prototype.post = function (newMinder) {
 		var self = this;
 		minderResource.save( newMinder ).$promise
 		.then(function onSuccess(success) {
@@ -40,6 +47,57 @@ angular.module('minderApp', ['ngResource'])
 			self.new = {};
 		});
 	}
+
+	Minder.prototype.completed = function (id) {
+		var self = this;
+		minderResource.get({ id: id }).$promise
+		.then(function onResponce(res) {
+			res.completed = JSON.stringify(!res.completed);
+			res.$save({ id: id }).then(function onSuccess(success) {
+				$log.info(success);
+				self.query();
+			}, function onError(error) {
+				$log.error(error);
+			});
+		}, function onError(error) {
+			$log.error(error);
+		});
+	}
+
+	Minder.prototype.update = function (id, obj) {
+		var self = this;
+		minderResource.get({ id: id }).$promise
+		.then(function onResponce(res) {
+			angular.forEach(obj, function (val, key) {
+				res[key] = val;
+			})
+			res.completed = JSON.stringify(res.completed);
+			res.$save({ id: id }).then(function onSuccess(success) {
+				$log.info(success);
+				self.query();
+			});
+		}, function onError(error) {
+			$log.error(error);
+		});
+	}
+
+	Minder.prototype.delete = function (id) {
+		var self = this;
+		minderResource.get({ id: id }).$promise
+		.then(function onSuccess(success) {
+			$log.info(success);
+			success.$delete({ id: id })
+			.then(function onSuccess(success) {
+				$log.info(success);
+				self.query();
+			}, function onError(error) {
+				$log.error(error);
+			});
+		}, function onError(error) {
+			$log.error(error);
+		});
+	}
+
 	return Minder;
 })
 
@@ -62,6 +120,12 @@ angular.module('minderApp', ['ngResource'])
 	var self = this;
 	self.welcome = 'Working';
 	self.Minder = new MinderDTO;
+
+	self.isEditable = false;
+
+	self.editForm = function () {
+		self.isEditable = !self.isEditable;
+	};
 
 	self.register = function() {
 	  	return $http.post('/users', {
@@ -88,31 +152,13 @@ angular.module('minderApp', ['ngResource'])
 	};
 
 	self.isCurrentUser = function () {
-		return true;
+		if ( localStorage['Auth'] ) {
+			return true;	
+		} else {
+			return false;
+		}
 	};
 
-	self.showOne = function (id) {
-		minderResource.get({ id: id }).$promise.then(function (res) {
-			console.log(res);
-		});
-	};
-
-	self.markComplete = function (id) {
-		minderResource.get({ id: id }).$promise.then(function (res) {
-			res.completed = JSON.stringify(!res.completed);
-			res.$save({ id: id });
-			console.log('Entry Updated');
-		});
-	};
-
-	self.deleteMinder = function (id) {
-		minderResource.get({ id: id }).$promise.then(function (res) {
-			res.$delete({ id: id });
-		}).then(function onSuccess() {
-			self.minder = {};
-			console.log('Entry Deleted');
-		});
-	};
-
+	delete localStorage['Auth'];
 });
 
