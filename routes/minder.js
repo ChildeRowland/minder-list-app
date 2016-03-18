@@ -64,7 +64,7 @@ module.exports = function (app) {
 				res.status(500).send();
 			});
 		})
-		.put(middleware.requireAuthentication, function (req, res) {
+		.post(middleware.requireAuthentication, function (req, res) {
 			var minderId = parseInt(req.params.id, 10);
 			
 			var body = _.pick(req.body, 'description', 'completed');
