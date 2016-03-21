@@ -1,4 +1,4 @@
-angular.module('minderApp', ['ngResource'])
+angular.module('minderApp', ['ngResource', 'ngAnimate'])
 
 .factory('userResource', function ($resource) {
 	userResource = {};
@@ -80,29 +80,14 @@ angular.module('minderApp', ['ngResource'])
 	self.welcome = 'Working';
 	self.Minder = new MinderDTO;
 
-	// self.register = function() {
-	//   	return $http.post('/users', {
-	//       	email: self.email,
-	//       	password: self.password
-	// 	}).then(function onSuccess(user) {
-	// 		$log.info('user created', user);
-	// 	}, function onError(error) {
-	// 		$log.error('unable to create user', error);
-	// 	});
-	// };
-
-	// self.login = function() {
-	// 	return $http.post('/users/login', {
-	// 		email: self.email,
-	// 		password: self.password
-	// 	}).then(function onSuccess(res) {
-	// 		var authHeader = res.headers('Auth');
-	// 		localStorage.setItem('Auth', authHeader);
-	// 		$log.info('user logged in');
-	// 	}, function onError(error) {
-	// 		$log.error('Not able to log in the user', error);
-	// 	});
-	// };
+	self.init = function () {
+		if ( self.initalLoad === undefined ) {
+			return true;
+			self.initalLoad = true;
+		} else {
+			return false;
+		}
+	}
 
 	self.editForm = function (idx) {
 		var minderObj = self.Minder.all[idx];
@@ -118,6 +103,6 @@ angular.module('minderApp', ['ngResource'])
 		}
 	};
 
-	delete localStorage['Auth'];
+	// delete localStorage['Auth'];
 });
 

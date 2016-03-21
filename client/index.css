@@ -1,0 +1,48 @@
+.minder-bubble {
+	background-color: grey;
+	border-radius: 25px;
+	margin: 5px;
+	padding: 5px;
+}
+
+.minder-bubble.initial.ng-enter {
+	transition: 0.5s linear all;
+  	opacity: 0;
+  	transform: translateX(200px);
+}
+
+.minder-bubble.initial.ng-enter-stagger {
+	transition-delay: 0.25s;
+	transition-duration: 0s;
+}
+
+.minder-bubble.initial.ng-enter.ng-enter-active {
+	transform: translateX(0);
+	opacity: 1.0;
+}
+
+.minder-bubble.last.ng-enter {
+	transition: 0.5s linear all;
+  	opacity: 0;
+  	transform: translateX(200px);
+}
+
+.minder-bubble.last.ng-enter-stagger {
+	transition-delay: 0.25s;
+	transition-duration: 0s;
+}
+
+.minder-bubble.last.ng-enter.ng-enter-active {
+	transform: translateX(0);
+	opacity: 1.0;
+}
+/* The starting CSS styles for the enter animation */
+.frack.ng-enter {
+  transition:2.0s linear all;
+  opacity:0;
+}
+
+/* The finishing CSS styles for the enter animation */
+.frack.ng-enter.ng-enter-active {
+  opacity:1;
+}
