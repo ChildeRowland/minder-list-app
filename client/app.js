@@ -113,6 +113,6 @@ angular.module('minderApp', ['ngResource', 'ngAnimate'])
 		}
 	};
 
-	delete localStorage['Auth'];
+	// delete localStorage['Auth'];
 });
 
