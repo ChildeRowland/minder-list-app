@@ -80,6 +80,16 @@ angular.module('minderApp', ['ngResource', 'ngAnimate'])
 	self.welcome = 'Working';
 	self.Minder = new MinderDTO;
 
+	self.isLast = function (dateTime) {
+		var now = new Date();
+		var updated = new Date(dateTime);
+		var diff = Math.abs( now - updated );
+
+		if ( diff < 1000 ) {
+			return true;
+		}
+	}
+
 	self.init = function () {
 		if ( self.initalLoad === undefined ) {
 			return true;

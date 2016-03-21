@@ -48,9 +48,11 @@
         <div ng-repeat="result in ctrl.Minder.all" 
              class="minder-bubble"
              ng-class="{
-                'last': $last===true,
-                'initial': main.init()
+                'last': ctrl.isLast(result.updatedAt),
+                'initial': false
              }">
+
+             {{ ctrl.isLast(result.updatedAt) }}
             
                 <div ng-hide="result.isEditable">
                     <span ng-click="ctrl.showOne(ctrl.result.id)">
