@@ -11,79 +11,86 @@
     <script src="assets/services/minderDTO-resource.js"></script>
 </head>
 
-<body ng-app="minderApp" ng-controller="Main as ctrl">
+<body ng-app="minderApp" ng-controller="Main as main">
     <div class="container">
-        <h1>Get the Auth Out</h1>{{ctrl.welcome}}<br>
-
-        <div ng-if="bool" class="frack">
-           Fade me in out
-        </div>
-        <button ng-click="bool=true">Fade In!</button>
-        <button ng-click="bool=false">Fade Out!</button>
+        <h1>Get the Auth Out</h1>
 
         <div ng-controller="User as ctrl">
-            <input type="text" ng-model="ctrl.User.current.email" placeholder="username"><br>
-            <input type="password" ng-model="ctrl.User.current.password" placeholder="password"><br>
-            <br>
+            <form ng-if="!main.isCurrentUser()">
+                <input type="text" ng-model="ctrl.User.current.email" placeholder="username"><br>
+                <input type="password" ng-model="ctrl.User.current.password" placeholder="password"><br>
+                <br>
 
-            <button ng-click="ctrl.User.register()">Register</button>
-            <button ng-click="ctrl.User.login()">Login</button>
+                <button ng-click="ctrl.User.register()">Register</button>
+                <button ng-click="ctrl.User.login()">Login</button>
+            </form>
+            <div>
+                <button ng-click="ctrl.User.logout()"
+                        ng-if="main.isCurrentUser()">
+                    Logout
+                </button>
+            </div>
+            <input ng-model="ctrl.msg">
+            <button ng-click="ctrl.addMessage(ctrl.msg)">'emit' message</button>
+            {{ main.mess | json }}
         </div>
 
         <hr>
 
-        <div ng-if="ctrl.isCurrentUser()">
+        <div ng-if="main.isCurrentUser()">
             <form>
                 <input type="text"
-                       ng-model="ctrl.Minder.new.description"
+                       ng-model="main.Minder.new.description"
                        placeholder="description">
                 <input type="submit"
-                       ng-click="ctrl.Minder.post( ctrl.Minder.new )"
+                       ng-click="main.Minder.post( main.Minder.new )"
                        value="Add Reminder"> 
             </form>
         </div>
 
         <hr>
 
-        <div ng-repeat="result in ctrl.Minder.all" 
+        <div ng-repeat="result in main.Minder.all" 
              class="minder-bubble"
              ng-class="{
-                'last': ctrl.isLast(result.updatedAt),
+                'last': main.isLast(result.updatedAt),
                 'initial': false
              }">
-
-             {{ ctrl.isLast(result.updatedAt) }}
             
                 <div ng-hide="result.isEditable">
-                    <span ng-click="ctrl.showOne(ctrl.result.id)">
+                    <div ng-click="main.showOne(main.result.id)">
                         <span ng-bind="result.description"></span>
-                    </span>
-                    <button ng-click="ctrl.Minder.completed( result.id )">
-                        Completed = {{ result.completed }}
-                    </button>
-                    <button ng-click="ctrl.editForm($index)">
-                        Edit
-                    </button>
-                    <button ng-click="ctrl.Minder.delete( result.id )">
-                        Delete
-                    </button>
+                    </div>
+                    <div>
+                        <button ng-click="main.Minder.completed( result.id )">
+                            Completed = {{ result.completed }}
+                        </button>
+                        <button ng-click="main.editForm($index)">
+                            Edit
+                        </button>
+                        <button ng-click="main.Minder.delete( result.id )">
+                            Delete
+                        </button>
+                    </div>
                 </div>
             
 
             <div ng-show="result.isEditable">
-                <input type="text"
-                       ng-model="ctrl.Minder.all[$index].newDesc"
-                       ng-show="result.isEditable">
-                <button ng-click="ctrl.Minder.update( result.id, {description: result.newDesc}); ctrl.editForm($index)">
+                <div>
+                    <input type="text"
+                           ng-model="main.Minder.all[$index].newDesc"
+                           ng-show="result.isEditable">
+                </div>
+                <button ng-click="main.Minder.update( result.id, {description: result.newDesc}); main.editForm($index)">
                     Update
                 </button>
-                <button ng-click="ctrl.editForm($index)">
+                <button ng-click="main.editForm($index)">
                     Cancel
                 </button>
             </div>
         </div>
         <pre>
-            {{ ctrl.Minder.all | json }}
+            {{ main.Minder.all | json }}
         </pre>
     </div>
 </body>

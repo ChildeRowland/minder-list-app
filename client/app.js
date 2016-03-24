@@ -12,6 +12,10 @@ angular.module('minderApp', ['ngResource', 'ngAnimate'])
 				response.headers = headers;
 				return response;
 			}
+		},
+		delete: {
+			method: 'DELETE',
+			isArray: false
 		}
 	});
 	
@@ -28,7 +32,8 @@ angular.module('minderApp', ['ngResource', 'ngAnimate'])
 		var self = this;
 		userResource.register.save( self.current ).$promise
 			.then(function onSuccess(user) {
-				$log.info('user created', user)
+				$log.info('user created', user);
+				return self.login();
 			}, function onError(error) {
 				$log.error('unable to create the user', error);
 			});
@@ -41,45 +46,78 @@ angular.module('minderApp', ['ngResource', 'ngAnimate'])
 				var authHeader = res.headers('Auth');
 				localStorage.setItem('Auth', authHeader);
 				$log.info('user logged in');
+				self.current = {};
 			}, function onError(error) {
 				$log.error('Not able to log in the user', error);
+			});
+	}
+
+	User.prototype.logout = function () {
+		var self = this;
+		userResource.login.delete().$promise
+			.then(function onSuccess(res) {
+				$log.info('user logged out');
+			}, function onError(error) {
+				$log.error(error);
 			});
 	}
 
 	return User;
 })
 
-.controller('User', function ($log, UserDTO) {
+.factory('messages', function () {
+	var messages = { 
+		list: [],
+
+		add: function (message) {
+			messages.list.push({text: message});
+		},
+
+		getList: function () {
+			return new Promise(function (resolve, reject) {
+				resolve(messages.list);
+			});
+		}
+	};
+	return messages;
+})
+
+.controller('User', function (UserDTO, messages, $rootScope) {
 	var self = this;
 	self.User = new UserDTO;
 
-	// self.register = function () {
-	// 	userResource.register.save( self.user ).$promise
-	// 		.then(function onSuccess(user) {
-	// 			$log.info('user created', user)
-	// 		}, function onError(error) {
-	// 			$log.error('unable to create the user', error);
-	// 		});
-	// };
+	self.addMessage = function (message) {
+		messages.add(message);
+		self.msg = "";
+		console.log(messages.list.length);
+	};
 
-	// self.login = function () {
-	// 	userResource.login.save( self.user ).$promise
-	// 		.then(function onSuccess(res) {
-	// 			var authHeader = res.headers('Auth');
-	// 			localStorage.setItem('Auth', authHeader);
-	// 			$log.info('user logged in');
-	// 		}, function onError(error) {
-	// 			$log.error('Not able to log in the user', error);
-	// 		});
+	// self.handleMess = function (msg) {
+	// 	$scope.$emit('clicked', {message: msg});
 	// };
-
 })
 
-.controller('Main', function (MinderDTO) {
+.controller('Main', function (MinderDTO, messages, $rootScope) {
 	var self = this;
-	self.welcome = 'Working';
 	self.Minder = new MinderDTO;
 
+	$rootScope.$watch(function () {
+		return messages.list.length
+	}, function () {
+		messages.getList().then(function onSuccess(success) {
+			return self.mess = success;
+		}).then(function () {
+			console.log('fired');
+		});
+	});	
+	
+
+	// $scope.$on('clicked', function (event, args) {
+	// 	console.log(event, args);
+	// 	self.message = args.message;
+	// })
+
+	
 	self.isLast = function (dateTime) {
 		var now = new Date();
 		var updated = new Date(dateTime);
@@ -113,6 +151,6 @@ angular.module('minderApp', ['ngResource', 'ngAnimate'])
 		}
 	};
 
-	// delete localStorage['Auth'];
+	delete localStorage['Auth'];
 });
 
