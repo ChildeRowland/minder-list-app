@@ -56,6 +56,7 @@ angular.module('minderApp', ['ngResource', 'ngAnimate'])
 		var self = this;
 		userResource.login.delete().$promise
 			.then(function onSuccess(res) {
+				delete localStorage['Auth'];
 				$log.info('user logged out');
 			}, function onError(error) {
 				$log.error(error);
@@ -91,31 +92,33 @@ angular.module('minderApp', ['ngResource', 'ngAnimate'])
 		self.msg = "";
 		console.log(messages.list.length);
 	};
-
-	// self.handleMess = function (msg) {
-	// 	$scope.$emit('clicked', {message: msg});
-	// };
 })
 
 .controller('Main', function (MinderDTO, messages, $rootScope) {
 	var self = this;
 	self.Minder = new MinderDTO;
 
-	$rootScope.$watch(function () {
-		return messages.list.length
-	}, function () {
-		messages.getList().then(function onSuccess(success) {
-			return self.mess = success;
-		}).then(function () {
-			console.log('fired');
-		});
-	});	
+	// Watch for user, and get there minder list.
+	// $rootScope.$watch(function () {
+	// 	return messages.list.length
+	// }, function () {
+	// 	messages.getList().then(function onSuccess(success) {
+	// 		return self.mess = success;
+	// 	}).then(function () {
+	// 		console.log('fired');
+	// 	});
+	// });
+
+	$rootScope.$watch(function () { 
+		return localStorage['Auth'];
+		}, function (newVal, oldVal) {
+			if ( newVal ) {
+				self.Minder.query();
+			}
+	}, true);
 	
 
-	// $scope.$on('clicked', function (event, args) {
-	// 	console.log(event, args);
-	// 	self.message = args.message;
-	// })
+	
 
 	
 	self.isLast = function (dateTime) {
@@ -154,3 +157,11 @@ angular.module('minderApp', ['ngResource', 'ngAnimate'])
 	delete localStorage['Auth'];
 });
 
+	// self.handleMess = function (msg) {
+	// 	$scope.$emit('clicked', {message: msg});
+	// };
+
+	// $scope.$on('clicked', function (event, args) {
+	// 	console.log(event, args);
+	// 	self.message = args.message;
+	// });

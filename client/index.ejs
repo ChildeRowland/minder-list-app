@@ -20,7 +20,7 @@
                 <input type="text" ng-model="ctrl.User.current.email" placeholder="username"><br>
                 <input type="password" ng-model="ctrl.User.current.password" placeholder="password"><br>
                 <br>
-
+                <!-- ctrl.user -->
                 <button ng-click="ctrl.User.register()">Register</button>
                 <button ng-click="ctrl.User.login()">Login</button>
             </form>
@@ -38,55 +38,57 @@
         <hr>
 
         <div ng-if="main.isCurrentUser()">
-            <form>
-                <input type="text"
-                       ng-model="main.Minder.new.description"
-                       placeholder="description">
-                <input type="submit"
-                       ng-click="main.Minder.post( main.Minder.new )"
-                       value="Add Reminder"> 
-            </form>
-        </div>
-
-        <hr>
-
-        <div ng-repeat="result in main.Minder.all" 
-             class="minder-bubble"
-             ng-class="{
-                'last': main.isLast(result.updatedAt),
-                'initial': false
-             }">
-            
-                <div ng-hide="result.isEditable">
-                    <div ng-click="main.showOne(main.result.id)">
-                        <span ng-bind="result.description"></span>
-                    </div>
-                    <div>
-                        <button ng-click="main.Minder.completed( result.id )">
-                            Completed = {{ result.completed }}
-                        </button>
-                        <button ng-click="main.editForm($index)">
-                            Edit
-                        </button>
-                        <button ng-click="main.Minder.delete( result.id )">
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            
-
-            <div ng-show="result.isEditable">
-                <div>
+            <div>
+                <form>
                     <input type="text"
-                           ng-model="main.Minder.all[$index].newDesc"
-                           ng-show="result.isEditable">
+                           ng-model="main.Minder.new.description"
+                           placeholder="description">
+                    <input type="submit"
+                           ng-click="main.Minder.post( main.Minder.new )"
+                           value="Add Reminder"> 
+                </form>
+            </div>
+
+            <hr>
+
+            <div ng-repeat="result in main.Minder.all" 
+                 class="minder-bubble"
+                 ng-class="{
+                    'last': main.isLast(result.updatedAt),
+                    'initial': false
+                 }">
+                
+                    <div ng-hide="result.isEditable">
+                        <div ng-click="main.showOne(main.result.id)">
+                            <span ng-bind="result.description"></span>
+                        </div>
+                        <div>
+                            <button ng-click="main.Minder.completed( result.id )">
+                                Completed = {{ result.completed }}
+                            </button>
+                            <button ng-click="main.editForm($index)">
+                                Edit
+                            </button>
+                            <button ng-click="main.Minder.delete( result.id )">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                
+
+                <div ng-show="result.isEditable">
+                    <div>
+                        <input type="text"
+                               ng-model="main.Minder.all[$index].newDesc"
+                               ng-show="result.isEditable">
+                    </div>
+                    <button ng-click="main.Minder.update( result.id, {description: result.newDesc}); main.editForm($index)">
+                        Update
+                    </button>
+                    <button ng-click="main.editForm($index)">
+                        Cancel
+                    </button>
                 </div>
-                <button ng-click="main.Minder.update( result.id, {description: result.newDesc}); main.editForm($index)">
-                    Update
-                </button>
-                <button ng-click="main.editForm($index)">
-                    Cancel
-                </button>
             </div>
         </div>
         <pre>
